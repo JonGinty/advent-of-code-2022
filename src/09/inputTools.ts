@@ -42,3 +42,10 @@ export function xyDiff(a: xy, b: xy, abs = false) {
     return abs ? [Math.abs(result[0]), Math.abs(result[1])] : result;
 }
 
+export function buildXyArray(length: number): xy[] {
+    const arr: xy[] = [];
+    for (let i = 0; i < length; i++) {
+        arr.push([0,0]);
+    }
+    return arr;
+}
