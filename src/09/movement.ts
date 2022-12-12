@@ -1,4 +1,3 @@
-import { CHAR_HYPHEN_MINUS } from "https://deno.land/std@0.166.0/path/_constants.ts";
 import { command, xy, dc, xyDiff } from "./inputTools.ts";
 
 
