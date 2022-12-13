@@ -14,12 +14,13 @@ export function traverseGrid(grid: Grid, startChar: string, targetChar: string):
 
 export function findMinPath(grid: Grid, currentPath: path, deadEnds: gridEntry[], target: gridEntry): path | false {
     //console.log(currentPath.map(c => c.char));
+    console.log(currentPath.length);
     const current = currentPath.findLast(() => true)!;
     const nextMoves = grid
                         .getSurroundingChars(current)
                         // strip rows we've already done
                         .filter(move => !currentPath.find(old => move.row === old.row && move.col === old.col))
-                        .filter(move => !deadEnds.find(old => move.row === old.row && move.col === old.col))
+                        // .filter(move => !deadEnds.find(old => move.row === old.row && move.col === old.col))
                         .filter(move => validMove(current.char, move.char));
     const final = nextMoves.find(m => m.char === target.char);
     if (final) {
@@ -32,7 +33,7 @@ export function findMinPath(grid: Grid, currentPath: path, deadEnds: gridEntry[]
     const nextPaths = nextMoves.map(m => findMinPath(grid, [...currentPath, m], deadEnds, target)).filter(p => p);
     //console.log("next:", nextPaths);
     if (nextPaths.length === 0) {
-        deadEnds.push(current);
+        // deadEnds.push(current);
         return false; // no way to proceed;
     }
     return nextPaths.reduce((p, c) => c && p && c.length < p.length ? c : p);
