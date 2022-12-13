@@ -1,49 +1,17 @@
-
-
-
-export function readGridFromInput(input: string): Grid {
-    return new Grid(input);
-}
-
-export function traverseGrid(grid: Grid, startChar: string, targetChar: string): path | false {
-    const path:path = [];
-    path.push({...grid.findChar(startChar), char: startChar});
-    const target = {...grid.findChar(targetChar), char: targetChar};
-    return findMinPath(grid, path, [], target);
-}
-
-export function findMinPath(grid: Grid, currentPath: path, deadEnds: gridEntry[], target: gridEntry): path | false {
-    //console.log(currentPath.map(c => c.char));
-    console.log(currentPath.length);
-    const current = currentPath.findLast(() => true)!;
-    const nextMoves = grid
-                        .getSurroundingChars(current)
-                        // strip rows we've already done
-                        .filter(move => !currentPath.find(old => move.row === old.row && move.col === old.col))
-                        // .filter(move => !deadEnds.find(old => move.row === old.row && move.col === old.col))
-                        .filter(move => validMove(current.char, move.char));
-    const final = nextMoves.find(m => m.char === target.char);
-    if (final) {
-        console.log("path found! ", currentPath.length);
-        return [...currentPath, final];
-    } 
-    
-    nextMoves.sort((a, b) => order.indexOf(a.char) - order.indexOf( b.char));
-    //if (nextMoves.length) console.log(nextMoves.map(m => m.char));
-    const nextPaths = nextMoves.map(m => findMinPath(grid, [...currentPath, m], deadEnds, target)).filter(p => p);
-    //console.log("next:", nextPaths);
-    if (nextPaths.length === 0) {
-        // deadEnds.push(current);
-        return false; // no way to proceed;
-    }
-    return nextPaths.reduce((p, c) => c && p && c.length < p.length ? c : p);
-}
-
 export class Grid {
     rows: string[];
+    ranks: number[][];
+
+    ranked = false; // I regred using OOP
 
     constructor(input: string) {
         this.rows = input.split("\n");
+        const rowLength = this.rows[0].length;
+        const totalCellCount = this.rows.length * rowLength;
+        const arr = new Array(rowLength).fill(totalCellCount);
+        this.ranks = [];
+        for (let i = 0; i < this.rows.length; i++) this.ranks.push([...arr]);
+        ///this.ranks = new Array(this.rows.length).fill([...arr]);
     }
 
     getChar(position: position) {
@@ -69,6 +37,62 @@ export class Grid {
         if (position.col > 0) positions.push({row: position.row, col: position.col - 1}); // left
         return positions.map(p => {return {...p, char: this.getChar(p)}});
     }
+
+    evaluateRound(): boolean {
+        let changed = false;
+        for (let r = 0; r < this.rows.length; r++) {
+            for (let c = 0; c < this.rows[0].length; c++) {
+                const adjacent = this.getSurroundingChars(p(r, c));
+                adjacent.forEach(item => {
+                    const thisrank = this.ranks[r][c];
+                    const thisItem = this.rows[r][c];
+                    const otherItem = this.rows[item.row][item.col]
+                    // console.log(thisItem, otherItem);
+                    if (validMove(thisItem, otherItem)) {
+                        // console.log("valid");
+                        const otherank = this.ranks[item.row][item.col] + 1; // need to add one to get here
+                        // console.log(thisrank, otherank);
+                        if (otherank < thisrank) {
+                            this.ranks[r][c] = otherank;
+                            changed = true;
+                        }
+                    }
+                });
+            }
+        }
+        return changed;
+    }
+
+    rankSquares(end: string, start: string) {
+        const endS = this.findChar(end);
+        this.ranks[endS.row][endS.col] = 0;
+        // console.log(this.rows);
+        // console.log(this.ranks);
+        if (!this.ranked) {
+            while (this.evaluateRound()) {
+                // console.log("still running");
+            }
+            this.ranked = true;
+        }
+
+        const startS = this.findChar(start);
+        // console.log(this.ranks);
+        return this.ranks[startS.row][startS.col];
+    }
+
+    lowestRankForInput(end: string, input: string) {
+        let min = this.rankSquares(end, input);
+        for (let r = 0; r < this.rows.length; r++) {
+            for (let c = 0; c < this.rows[0].length; c++) {
+                if (this.rows[r][c] === input) {
+                    min = Math.min(min, this.ranks[r][c]);
+                }
+            }
+        }
+        return min;
+    }
+
+    
 }
 
 export const order = "SabcdefghijklmnopqrstuvwxyzE";
