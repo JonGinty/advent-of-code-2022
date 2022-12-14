@@ -27,7 +27,7 @@ export function inputRange(input: xy[][], startPoint?: xy): xyRange {
 export function buildGrid(input: xy[][], startPoint?: xy): {grid: grid, range: xyRange} {
     const range = inputRange(input, startPoint);
     const grid: grid = [];
-    for (let i = 0; i <= range.max[1]; i++) {
+    for (let i = 0; i <= range.max[1] + 1; i++) {
         grid[i] = new Array(range.max[0] + 1000).fill(".") // ok, I've learned my lesson, no more 2d arrays for grids...
     }
 
@@ -57,7 +57,11 @@ export function buildGrid(input: xy[][], startPoint?: xy): {grid: grid, range: x
     return {grid, range};
 }
 
-export function fillWithSand(grid: grid, range: xyRange, startPoint: xy, hitFloor = false) {
+export function addFloorToGrid(grid: grid) {
+    grid.push(new Array(5000).fill("#"));
+}
+
+export function fillWithSand(grid: grid, range: xyRange, startPoint: xy) {
     let settled = true;
     const ts = startPoint // translate(startPoint, range);
     // console.log("start", ts)
@@ -67,7 +71,7 @@ export function fillWithSand(grid: grid, range: xyRange, startPoint: xy, hitFloo
         const path:xy[] = []
         let last = ts;
         settled = false;
-        for (let y = 0; y <= range.max[1]; y++) {
+        for (let y = 0; y < grid.length; y++) {
             path.push(last);
             // // console.log(last);
             if (grid[y][last[0]] === ".") {
@@ -91,6 +95,7 @@ export function fillWithSand(grid: grid, range: xyRange, startPoint: xy, hitFloo
                 // console.log("settled");
                 i++;
                 settled = true;
+                if (last[0] === ts[0] && last[1] === ts[1]) settled = false; // exit if hit start
                 // // console.log(last[0], last[1])
                 grid[last[1]][last[0]] = "o";
                 break;
@@ -162,7 +167,7 @@ function getGridRange(grid: grid): xyRange {
     let maxx: number | undefined = undefined;
     let maxy: number | undefined = undefined;
 
-    for (let y = 0; y < grid.length; y++) {
+    for (let y = 0; y < grid.length -1; y++) { // -1 to skip floor if present
         for (let x = 0; x < grid[y].length; x++) {
             if (isFull(grid[y][x])) {
                 miny = typeof(miny) === "number" ? Math.min(miny, y) : y;
