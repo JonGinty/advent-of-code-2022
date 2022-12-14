@@ -81,7 +81,7 @@ export function fillWithSand(grid: grid, range: xyRange, startPoint: xy) {
             } else if (grid[y][last[0] - 1] === ".") {
                 // console.log("moving down and left");
                 last = [last[0] - 1, y];
-            } else if (last[0] >= xRange(range)) {
+            } else if (last[0] >= xRange(range) -1) {
                 // console.log("off the right");
                 break; // off the right
             } else if (grid[y][last[0] + 1] === ".") {
