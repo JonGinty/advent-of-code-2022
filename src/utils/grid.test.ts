@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.166.0/testing/asserts.ts";
-import { Grid } from "./grid.ts";
+import { Grid, gridCoordB } from "./grid.ts";
 
 
 function addSomeData(grid: Grid<string>){
@@ -86,4 +86,15 @@ l.......m`
     const g = new Grid();
     g.parse(inp);
     assertEquals(g.draw(), exp);
+});
+
+
+Deno.test("Grid manhattan distance", () => {
+    assertEquals(Grid.manhattanDistance(gridCoordB(1,1),gridCoordB(1,1)), 0);
+    assertEquals(Grid.manhattanDistance(gridCoordB(1,1),gridCoordB(1,4)), 3);
+    assertEquals(Grid.manhattanDistance(gridCoordB(1,4),gridCoordB(1,1)), 3);
+    assertEquals(Grid.manhattanDistance(gridCoordB(4,1),gridCoordB(1,1)), 3);
+    assertEquals(Grid.manhattanDistance(gridCoordB(1,1),gridCoordB(4,1)), 3);
+    assertEquals(Grid.manhattanDistance(gridCoordB(1,1),gridCoordB(4,4)), 6);
+    assertEquals(Grid.manhattanDistance(gridCoordB(-1,1),gridCoordB(4,4)), 8);
 });

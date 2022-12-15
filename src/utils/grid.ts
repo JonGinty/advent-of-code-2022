@@ -70,7 +70,7 @@ export class Grid<T> {
             for (let x = range.minX; x <= range.maxX; x++) {
                 const key = Grid.buildKey(x, y);
                 const item = this.items[key]; // todo: could check keys instead of value
-                s += renderer(item);
+                s += renderer(item, this, gridCoordB(x,y));
             }
             lines.push(s);
         }
@@ -94,7 +94,9 @@ export class Grid<T> {
         return int;
     }
 
-    
+    public static manhattanDistance(a: gridCoord, b: gridCoord) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
 
     public parse(input: string, opts?: parseOptions<T>): void {
         const parser = opts?.valueExtractor || Grid.defaultValueExtractorForString as (s:string) => T | undefined;
@@ -144,10 +146,12 @@ export type gridRange = {
 }
 
 export type drawOptions<T> = {
-    renderer?: (item: T | undefined) => string;
+    renderer?: renderFunc<T>;
     noOutput?: boolean;
     customRange?: gridRange;
 }
+
+export type renderFunc<T> = (item: T | undefined, grid?: Grid<T>, coords?: gridCoord) => string
 
 export type parseOptions<T> = {
     valueExtractor?: (s:string) => T | undefined; // get value from single character
