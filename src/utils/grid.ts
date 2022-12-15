@@ -4,6 +4,20 @@ const delim = "_"
 export class Grid<T> {
     private items: Record<string, T> = {};
 
+    public getItems(includeEmpty?: boolean): gridSquare<T>[] {
+        if (includeEmpty) throw new Error("Not implemented include empty functionality yet");
+        const items: gridSquare<T>[] = []
+        for (const key in this.items) {
+            const c = Grid.getCoordsFromKey(key);
+            items.push({
+                x: c.x,
+                y: c.y,
+                item: this.items[key]
+            });
+        }
+        return items;
+    }
+
     public static buildKey(x: number, y: number) {
         return x + delim + y;
     }
@@ -39,7 +53,6 @@ export class Grid<T> {
             maxX: x.reduce((p,c) => Math.max(p,c)),
             maxY: y.reduce((p,c) => Math.max(p,c)),
         }
-
     }
 
     public draw(opts?: drawOptions<T>): string {
@@ -105,6 +118,22 @@ export class Grid<T> {
 export type gridCoord = {
     x: number;
     y: number;
+}
+
+export function gridCoordB(x: number, y: number) {
+    return {x,y}
+}
+
+export function isInBounds(range: gridRange, c: gridCoord): boolean {
+    if (c.x < range.minX) return false;
+    if (c.x > range.maxX) return false;
+    if (c.y < range.minY) return false;
+    if (c.y > range.maxY) return false;
+    return true;
+}
+
+export type gridSquare<T> = gridCoord & {
+    item: T
 }
 
 export type gridRange = {
