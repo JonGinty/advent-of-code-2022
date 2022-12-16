@@ -1,7 +1,5 @@
 import { splitByLine } from "../01/splitByLine.ts";
 
-
-
 export function readValvesFromInput(input: string): valve[] {
     return splitByLine(input).map(l => readValveFromInput(l));
 }
