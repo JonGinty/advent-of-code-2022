@@ -4,7 +4,7 @@ import { buildRecordForValves, readValvesFromInput, valveScore } from "./valveto
 
 const input = await Deno.readTextFile(indexRelative("input.txt"));
 const valves = readValvesFromInput(input);
-const score =  valveScore("AA", buildRecordForValves(valves),  [], 26)
+const score =  valveScore("AA", buildRecordForValves(valves),  [], 30)
 
 console.log("part 2", score.score);
 
