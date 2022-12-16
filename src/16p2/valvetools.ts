@@ -53,11 +53,25 @@ export function valveScore(valve: string, valves: Record<string, valve>, path: p
     let score: scoreResult = {score: 0, opened: undefined};
     let newPath = [...path];
 
-    const evaluateTunnels = (toSkip: string[]) => {
-        return v.tunnels.map(nv => valveScore(nv, valves, [...newPath, {from: valve, to: nv}], stepCount, toSkip, scorecache)).reduce((p, c) => p.score > c.score ? p : c);
+    const evaluateTunnels = () => {
+        return v.tunnels.map(nv => {
+            const s = valveScore(nv, valves, [...newPath, {from: valve, to: nv}], stepCount, externallyOpened, scorecache);
+            const done = [...new Set([...(s.opened || []), ...externallyOpened]).values()]
+            const s2 = valveScore(nv, valves, [...newPath, {from: valve, to: nv}], stepCount, done, scorecache);
+            if (done.length < 2) {
+                console.log("done", done);
+                console.log("alt", s2.opened);
+            }
+            
+            return {
+                score: s.score + s2.score,
+                opened: [...(s.opened || []), ...(s2.opened|| [])]
+            }
+
+        }).reduce((p, c) => p.score > c.score ? p : c);
     }
     newPath = [...path];
-    score = evaluateTunnels(externallyOpened);
+    score = evaluateTunnels();
 
     if (v.value !== 0) {
         const isOpen = externallyOpened.includes(v.key) || openValves.includes(v.key);
@@ -65,7 +79,7 @@ export function valveScore(valve: string, valves: Record<string, valve>, path: p
             console.log("valve is not open", v.key, openValves);
             newPath.push({from: valve, to: valve});
             const modifier = (stepCount - newPath.length) * v.value;
-            const newScore = evaluateTunnels(externallyOpened);
+            const newScore = evaluateTunnels();
             if (newScore.score + modifier > score.score) {
                 score = {score: newScore.score + modifier, opened: newScore.opened ? [...newScore.opened, valve] : [valve]}
             }
@@ -73,17 +87,17 @@ export function valveScore(valve: string, valves: Record<string, valve>, path: p
     }
 
     //score += evaluateTunnels([...externallyOpened, ])
-    const toSkip = [...externallyOpened];
-    score?.opened?.forEach(s => !toSkip.includes(s) ? toSkip.push(s) : undefined );
+    // const toSkip = [...externallyOpened];
+    // score?.opened?.forEach(s => !toSkip.includes(s) ? toSkip.push(s) : undefined );
 
-    toSkip.push(...externallyOpened)
-    const secondScore = evaluateTunnels(toSkip);
+    // toSkip.push(...externallyOpened)
+    // const secondScore = evaluateTunnels(toSkip);
     
-    const done = [...new Set([...toSkip, ...(secondScore.opened || [])]).values()];
-    score = {
-        score: score.score + secondScore.score,
-        opened: done
-    }
+    // const done = [...new Set([...toSkip, ...(secondScore.opened || [])]).values()];
+    // score = {
+    //     score: score.score + secondScore.score,
+    //     opened: done
+    // }
 
     if (typeof(scorecache[scorecachekey]) === "object" && scorecache[scorecachekey].score !== score.score) {
         console.log("found exception for score:", valve, score, scorecache[scorecachekey], scorecachekey);
