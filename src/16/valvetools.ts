@@ -89,6 +89,7 @@ export function valveScore(valve: string, valves: Record<string, valve>, path: p
     }
 
     // console.log("score found", score)
+    console.log("score found", scorecachekey)
     scorecache[scorecachekey] = score;
     return score;
 }

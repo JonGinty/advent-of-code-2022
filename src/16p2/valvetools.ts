@@ -27,79 +27,58 @@ export function buildRecordForValves(valves: valve[]): Record<string, valve> {
     return r;
 }
 
-const scorecache: Record<string, number> = {}; // it's bad that this is global but hey ho
+//const scorecache: Record<string, scoreResult> = {}; // it's bad that this is global but hey ho
+
+export type scoreResult = { score: number, opened: string[] | undefined};
+
+export function valveScore(valve: string, valves: Record<string, valve>, path: pathStep[], stepCount: number, externallyOpened: string[] = [], scorecache: Record<string, scoreResult> = {}): scoreResult {
+    //console.log(path.length);
 
 
-
-export function valveScore(left: string, right: string, valves: Record<string, valve>, path: pathStep[], openValves: string, stepCount: number, currentStep: number = 0): number {
-    ////console.log(stepCount);
-
-    ////console.log("checking", left, right);
-    //////console.log("for path", path);
-    if (currentStep >= stepCount) return 0;
-    const current = [left, right];
-    //const openValves =  [...new Set<string>(path.filter(p => p.from === p.to).map(p => p.from)).values()];
-    //openValves.sort();
-    const openValvesKey = openValves.length > 0 ? openValves : "closed";
-    const scorecachekey = `${current.join(",")}_${stepCount}_${currentStep}_${openValvesKey}`;
-
-    ////console.log("checking", scorecachekey);
-    //if (openValves.find((v: string, index: number) => openValves.indexOf(v) !== index)) throw "dupe found";
-    if (typeof(scorecache[scorecachekey]) === "number") {
-        ////console.log("from cache", scorecache[scorecachekey])
+    //console.log("checking", valve);
+    //console.log("for path", path);
+    if (path.length >= stepCount) return { score: 0, opened: undefined };
+    const v = valves[valve];
+    const openValves = path.filter(p => p.from === p.to).map(p => p.from);
+    openValves.sort();
+    const openValvesKey = openValves.length > 0 ? openValves.reduce((p,n) => p + n) : "closed";
+    const scorecachekey = `${valve}_${stepCount}_${path.length}_${openValvesKey}`;
+    if (typeof(scorecache[scorecachekey]) === "object") {
+        // console.log("from cache", scorecache[scorecachekey])
         return scorecache[scorecachekey];
     } 
 
-    let score = 0;
 
-    const leftToCheck = valves[left].tunnels;
-    const rightToCheck = valves[right].tunnels;
-    if (valves[left].value > 0 && !openValves.includes(left + ",")) {
-        //console.log("opening left", left);
-        leftToCheck.push(left);
+    let score: scoreResult = {score: 0, opened: undefined};
+    let newPath = [...path];
+
+    const evaluateTunnels = () => {
+        return v.tunnels.map(nv => valveScore(nv, valves, [...newPath, {from: valve, to: nv}], stepCount, externallyOpened, scorecache)).reduce((p, c) => p.score > c.score ? p : c);
     }
-    if (left !== right && valves[right].value > 0 && !openValves.includes(right + ","))  
-    {
-        //console.log("opening right", right);
-        rightToCheck.push(right);
+    newPath = [...path];
+    score = evaluateTunnels();
+
+    if (v.value !== 0) {
+        const isOpen = externallyOpened.includes(v.key) || openValves.includes(v.key);
+        if (!isOpen) {
+            console.log("valve is not open", v.key, openValves);
+            newPath.push({from: valve, to: valve});
+            const modifier = (stepCount - newPath.length) * v.value;
+            const newScore = evaluateTunnels();
+            if (newScore.score + modifier > score.score) {
+                score = {score: newScore.score + modifier, opened: newScore.opened ? [...newScore.opened, valve] : [valve]}
+            }
+        }
+    }
+    if (typeof(scorecache[scorecachekey]) === "number" && scorecache[scorecachekey] !== score) {
+        console.log("found exception for score:", valve, score, scorecache[scorecachekey], scorecachekey);
     }
 
-    ////console.log("tocheck", leftToCheck, rightToCheck)
-
-    leftToCheck.forEach(l => {
-        rightToCheck.forEach(r => {
-            // let opened = false;
-            let ov = openValves.length ? openValves.split(",") : [];
-            let modifier = 0;
-            if (l === left) {
-                modifier += valves[left].value * (stepCount - currentStep);
-
-                const ovset = new Set(ov);
-                ovset.add(left);
-                ov = [...ovset.values()];
-                ov.sort();
-                // opened = true;
-            }
-            if (r === right) {
-                modifier += valves[right].value * (stepCount - currentStep);
-                const ovset = new Set(ov);
-                ovset.add(right);
-                ov = [...ovset.values()];
-                ov.sort();
-                // opened = true;
-            }
-            const ovstring = modifier > 0 ? ov.join(",") : openValves;
-            // modifier = l === left ? valves[left].value * (stepCount - currentStep) : 0;
-            // modifier += r === right ? valves[right].value * (stepCount - currentStep) : 0; 
-            score = Math.max( valveScore(l, r, valves, [...path, {from: left, to: l}, {from: right, to: r}], ovstring, stepCount, currentStep + 1) + modifier, score);
-        });
-    });
-
-    // ////console.log("score found", score)
+    //console.log("score found", scorecachekey)
     scorecache[scorecachekey] = score;
-    console.log(`score found for ${scorecachekey}   -   ${score}`)
     return score;
 }
+
 
 
 export type valve = {

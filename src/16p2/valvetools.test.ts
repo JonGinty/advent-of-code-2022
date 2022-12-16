@@ -28,7 +28,7 @@ Deno.test("Valve shortest path", () => {
     // console.log(rankValves(valves, 4, "AA"));
 })
 
-Deno.test("valve score", () => {
-    const valves = readValvesFromInput(bigInput);
-    assertEquals(valveScore("AA", buildRecordForValves(valves),  [], 30), 1651);
-})
+// Deno.test("valve score", () => {
+//     const valves = readValvesFromInput(bigInput);
+//     assertEquals(valveScore("AA", buildRecordForValves(valves),  [], 30), 1651);
+// })
